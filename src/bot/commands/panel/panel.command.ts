@@ -1,9 +1,9 @@
 import {
   ApplicationCommandOptionType,
-  ApplicationCommandType,
   CommandInteraction,
   ModalBuilder,
-  ModalSubmitInteraction
+  ModalSubmitInteraction,
+  TextChannel
 } from 'discord.js'
 import {
   Discord,
@@ -14,6 +14,7 @@ import {
 } from 'discordx'
 
 import { PanelService } from '../../../services/panel.service'
+import { createPanelMessage } from '../../helpers'
 
 const groupName = 'panel'
 const createModalId = 'panel-create'
@@ -76,7 +77,13 @@ export class PanelCommand {
       required: true,
       async autocomplete(interaction, command) {
         const panelService = new PanelService()
-        const list = await panelService.getList()
+        const list = await panelService.getList({
+          conditions: {
+            server: {
+              guildId: interaction.guildId!
+            }
+          }
+        })
 
         await interaction.respond(
           list.map((panel) => ({
@@ -86,10 +93,41 @@ export class PanelCommand {
         )
       }
     })
-    restore: string,
+    id: string,
     interaction: CommandInteraction
   ) {
-    //
+    await interaction.deferReply({
+      ephemeral: true
+    })
+
+    const panel = await this.panelService.getOne({
+      id,
+      opts: {
+        relations: {
+          server: true,
+          categories: true
+        }
+      }
+    })
+
+    console.log({
+      panel,
+      guildId: interaction.guildId
+    })
+
+    if (!panel || panel.server.guildId !== interaction.guildId) {
+      return interaction.followUp({
+        content: `Панель "${id}" не найдена`,
+        ephemeral: true
+      })
+    }
+
+    await createPanelMessage(panel, interaction.channel as TextChannel)
+
+    return interaction.followUp({
+      content: `Панель "${id}" успешно восстановлена`,
+      ephemeral: true
+    })
   }
 
   @ModalComponent({

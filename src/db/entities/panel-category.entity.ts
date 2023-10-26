@@ -1,4 +1,4 @@
-import { APIEmbed } from 'discord.js'
+import { APIButtonComponent, APIEmbed } from 'discord.js'
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm'
 
 import { EntityBase } from './common'
@@ -13,11 +13,11 @@ export class PanelCategory extends EntityBase {
   @Column('text')
   public slug!: string
 
-  @Column('text')
-  public buttonName!: string
+  @Column('json')
+  public button!: APIButtonComponent
 
   @Column('json')
-  public helloEmbed!: APIEmbed
+  public embed!: APIEmbed
 
   @ManyToOne(() => Panel, (panel) => panel.categories)
   @JoinColumn()

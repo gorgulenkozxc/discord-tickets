@@ -8,13 +8,13 @@ import {
 
 export abstract class EntityBase {
   @PrimaryColumn('uuid')
-  public id = randomUUID()
+  public id: string = randomUUID()
 
   @CreateDateColumn()
-  public createdAt = new Date()
+  public createdAt: Date = new Date()
 
   @UpdateDateColumn()
-  public updatedAt = new Date()
+  public updatedAt: Date = new Date()
 
   @DeleteDateColumn()
   public deletedAt?: Date

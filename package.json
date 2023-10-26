@@ -1,15 +1,25 @@
 {
   "private": true,
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "dev": "tsc-watch --onSuccess \"node build\"",
+    "db:cli": "typeorm-ts-node-commonjs -d ./src/db/data-source.ts"
+  },
   "dependencies": {
     "@discordx/importer": "^1.2.3",
+    "better-sqlite3": "^9.0.0",
     "discord.js": "^14.13.0",
     "discordx": "^11.7.6",
+    "dotenv": "^16.3.1",
     "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.1.6",
+    "ts-node": "^10.9.1",
     "typeorm": "^0.3.17"
   },
   "devDependencies": {
     "@types/node": "^20.8.9",
+    "tsc-watch": "^6.0.4",
     "typescript": "^5.2.2"
   }
 }

@@ -1,8 +1,11 @@
+import 'reflect-metadata'
+
 import { resolve } from 'path'
 import { DataSource } from 'typeorm'
 
 export const dataSource = new DataSource({
   type: 'sqlite',
-  database: resolve(process.cwd(), './data/db.sqlite'),
-  entities: [resolve(__dirname, './entities/*.entity.{ts.js}')]
+  logging: true,
+  database: resolve(process.cwd(), './data/sqlite.db'),
+  entities: [resolve(__dirname, './entities/**/*.entity.{ts,js}')],
 })
