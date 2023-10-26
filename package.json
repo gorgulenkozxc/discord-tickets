@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "dependencies": {
+    "@discordx/importer": "^1.2.3",
+    "discord.js": "^14.13.0",
+    "discordx": "^11.7.6",
+    "reflect-metadata": "^0.1.13",
+    "sqlite3": "^5.1.6",
+    "typeorm": "^0.3.17"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.9",
+    "typescript": "^5.2.2"
+  }
+}
