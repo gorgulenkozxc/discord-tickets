@@ -1,3 +1,4 @@
+import { APIButtonComponent, APIEmbed } from 'discord.js'
 import { FindManyOptions, FindOneOptions, FindOptionsWhere } from 'typeorm'
 
 import { getRepo, PanelCategory } from '../db'
@@ -15,6 +16,14 @@ export interface IGetOnePanelCategoryParams extends IConditionsBase {
   opts?: FindOneOptions<PanelCategory>
 }
 
+export interface ICreatePanelCategoryParams {
+  name: string
+  slug: string
+  button: APIButtonComponent
+  embed: APIEmbed
+  panelId: string
+}
+
 export class PanelCategoryService {
   private readonly repo = getRepo(PanelCategory)
 
@@ -30,12 +39,28 @@ export class PanelCategoryService {
   public async getOne(
     params: IGetOnePanelCategoryParams = {}
   ): Promise<PanelCategory | undefined> {
-    const panel = await this.repo.findOne({
+    const category = await this.repo.findOne({
       where: this.makeConditions(params),
       ...params.opts
     })
 
-    return panel ?? undefined
+    return category ?? undefined
+  }
+
+  public async create(
+    params: ICreatePanelCategoryParams
+  ): Promise<PanelCategory> {
+    const category = this.repo.create({
+      name: params.name,
+      slug: params.slug,
+      button: params.button,
+      embed: params.embed,
+      panelId: params.panelId
+    })
+
+    await this.repo.insert(category)
+
+    return category
   }
 
   private makeConditions(

@@ -4,6 +4,7 @@
     "outDir": "build",
     "module": "commonjs",
     "target": "es2022",
+    "sourceMap": true,
     "moduleResolution": "node",
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

@@ -1,6 +1,7 @@
+import { APIEmbed } from 'discord.js'
 import { FindManyOptions, FindOneOptions, FindOptionsWhere } from 'typeorm'
 
-import { getRepo, Panel } from '../db'
+import { getRepo, Panel, Server } from '../db'
 
 interface IConditionsBase {
   id?: string
@@ -13,6 +14,12 @@ export interface IGetPanelListParams extends IConditionsBase {
 
 export interface IGetOnePanelParams extends IConditionsBase {
   opts?: FindOneOptions<Panel>
+}
+
+export interface ICreatePanelParams {
+  name: string
+  embed: APIEmbed
+  serverId: string
 }
 
 export class PanelService {
@@ -34,6 +41,18 @@ export class PanelService {
     })
 
     return panel ?? undefined
+  }
+
+  public async create(params: ICreatePanelParams): Promise<Panel> {
+    const panel = this.repo.create({
+      name: params.name,
+      embed: params.embed,
+      serverId: params.serverId
+    })
+
+    await this.repo.insert(panel)
+
+    return panel
   }
 
   private makeConditions(params: IConditionsBase): FindOptionsWhere<Panel> {

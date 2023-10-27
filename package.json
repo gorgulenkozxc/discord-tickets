@@ -3,7 +3,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "dev": "tsc-watch --onSuccess \"node build\"",
+    "dev": "tsc-watch --onSuccess \"node --enable-source-maps build\"",
     "db:cli": "typeorm-ts-node-commonjs -d ./src/db/data-source.ts"
   },
   "dependencies": {

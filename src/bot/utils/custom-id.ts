@@ -1,4 +1,7 @@
-const panelButtonPrefix = 'ticket-create'
+export const panelButtonPrefix = 'ticket-create'
+export const panelButtonIdPattern = new RegExp(
+  `^${panelButtonPrefix}\\-(.+?)+$`
+)
 
 /**
  * Создаёт Custom ID кнопки создания тикета

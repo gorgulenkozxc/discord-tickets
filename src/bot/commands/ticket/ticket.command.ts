@@ -1,4 +1,8 @@
-import { ApplicationCommandOptionType, CommandInteraction } from 'discord.js'
+import {
+  ApplicationCommandOptionType,
+  CommandInteraction,
+  PermissionFlagsBits
+} from 'discord.js'
 import { Discord, Slash, SlashGroup, SlashOption } from 'discordx'
 
 import { TicketService } from '../../../services/ticket.service'

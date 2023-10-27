@@ -24,14 +24,21 @@ bot.on('interactionCreate', async (interaction) => {
       return
     }
 
-    await interaction.followUp({
-      embeds: [
-        createErrorEmbed(
-          incidentId,
-          undefined,
-          error instanceof Error ? error : undefined
-        )
-      ]
-    })
+    const embed = createErrorEmbed(
+      incidentId,
+      undefined,
+      error instanceof Error ? error : undefined
+    )
+
+    if (interaction.replied) {
+      await interaction.followUp({
+        embeds: [embed]
+      })
+    } else {
+      await interaction.reply({
+        ephemeral: true,
+        embeds: [embed]
+      })
+    }
   }
 })

@@ -1,5 +1,7 @@
 import { EmbedBuilder } from 'discord.js'
 
+import { Color } from '../../constants'
+
 /**
  * Создаёт эмбед с описанием ошибки
  * @param incidentId ID инцидента
@@ -15,7 +17,7 @@ export function createErrorEmbed(
   description ??= 'Увы, возникла непредвиденная ошибка'
   const embed = new EmbedBuilder()
     .setTitle('Возникла ошибка')
-    .setColor(0xecb359)
+    .setColor(Color.Yellow)
     .setDescription(`${description}:\`\`\`\n${error?.message}\n\`\`\``)
     .addFields({
       name: 'ID инцидента',

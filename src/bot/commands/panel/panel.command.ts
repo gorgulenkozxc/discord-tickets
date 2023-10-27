@@ -1,9 +1,16 @@
 import {
+  ActionRowBuilder,
+  APIEmbed,
   ApplicationCommandOptionType,
   CommandInteraction,
+  ComponentBuilder,
+  EmbedBuilder,
   ModalBuilder,
   ModalSubmitInteraction,
-  TextChannel
+  PermissionFlagsBits,
+  TextChannel,
+  TextInputBuilder,
+  TextInputStyle
 } from 'discord.js'
 import {
   Discord,
@@ -13,8 +20,11 @@ import {
   SlashOption
 } from 'discordx'
 
+import { Color } from '../../../constants'
 import { PanelService } from '../../../services/panel.service'
+import { ServerService } from '../../../services/server.service'
 import { createPanelMessage } from '../../helpers'
+import { panelAutocomplete } from '../../utils/autocomplete'
 
 const groupName = 'panel'
 const createModalId = 'panel-create'
@@ -23,11 +33,13 @@ const editModalId = 'panel-edit'
 @SlashGroup(groupName)
 @SlashGroup({
   name: groupName,
-  description: 'Управление панелями'
+  description: 'Управление панелями',
+  defaultMemberPermissions: [PermissionFlagsBits.Administrator]
 })
 @Discord()
 export class PanelCommand {
   private readonly panelService = new PanelService()
+  private readonly serverService = new ServerService()
 
   @Slash({
     name: 'create',
@@ -36,11 +48,31 @@ export class PanelCommand {
   public async create(interaction: CommandInteraction) {
     const modal = new ModalBuilder({
       title: 'Создание панели',
-      customId: createModalId,
-      components: [
-        //
-      ]
+      customId: createModalId
     })
+
+    const fields: ComponentBuilder<any>[] = [
+      new TextInputBuilder()
+        .setStyle(TextInputStyle.Short)
+        .setCustomId('name')
+        .setLabel('Название панели')
+        .setPlaceholder('К примеру: Поддержка')
+        .setRequired(true),
+      new TextInputBuilder()
+        .setStyle(TextInputStyle.Paragraph)
+        .setCustomId('embed')
+        .setLabel('Настройки эмбеда')
+        .setPlaceholder(
+          'Можно указать содержимое эмбеда или JSON объект с полной настройкой.'
+        )
+        .setRequired(true)
+    ]
+
+    for (const component of fields) {
+      modal.addComponents(new ActionRowBuilder<any>().addComponents(component))
+    }
+
+    await interaction.showModal(modal)
   }
 
   @Slash({
@@ -75,23 +107,7 @@ export class PanelCommand {
       name: 'id',
       description: 'ID панели',
       required: true,
-      async autocomplete(interaction, command) {
-        const panelService = new PanelService()
-        const list = await panelService.getList({
-          conditions: {
-            server: {
-              guildId: interaction.guildId!
-            }
-          }
-        })
-
-        await interaction.respond(
-          list.map((panel) => ({
-            name: panel.name,
-            value: panel.id
-          }))
-        )
-      }
+      autocomplete: panelAutocomplete
     })
     id: string,
     interaction: CommandInteraction
@@ -134,13 +150,55 @@ export class PanelCommand {
     id: createModalId
   })
   private async createModal(interaction: ModalSubmitInteraction) {
-    //
+    await interaction.deferReply({
+      ephemeral: true
+    })
+
+    const [nameInput, embedInput] = [
+      interaction.fields.getTextInputValue('name'),
+      interaction.fields.getTextInputValue('embed')
+    ]
+
+    if (!nameInput) {
+      return interaction.followUp({
+        content: 'Название панели не может быть пустым'
+      })
+    }
+
+    let embed: APIEmbed
+
+    try {
+      embed = JSON.parse(embedInput)
+    } catch {
+      embed = new EmbedBuilder()
+        .setTitle(nameInput)
+        .setDescription(embedInput)
+        .setColor(Color.Blue)
+        .toJSON()
+    }
+
+    const server = await this.serverService.getOne({
+      guildId: interaction.guildId!
+    })
+
+    if (!server) {
+      throw new Error('Server not found. Try to re-invite bot.')
+    }
+
+    const panel = await this.panelService.create({
+      name: nameInput,
+      embed,
+      serverId: server.id
+    })
+
+    await interaction.followUp({
+      content: `Панель "${nameInput}" успешно создана`,
+      ephemeral: true
+    })
   }
 
   @ModalComponent({
     id: editModalId
   })
-  private async editModal(interaction: ModalSubmitInteraction) {
-    //
-  }
+  private async editModal(interaction: ModalSubmitInteraction) {}
 }
