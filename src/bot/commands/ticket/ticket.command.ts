@@ -1,32 +1,32 @@
 import {
   ApplicationCommandOptionType,
-  CommandInteraction,
-  PermissionFlagsBits
+  PermissionFlagsBits,
+  CommandInteraction
 } from 'discord.js'
-import { Discord, Slash, SlashGroup, SlashOption } from 'discordx'
+import { SlashOption, SlashGroup, Discord, Slash } from 'discordx'
 
 import { TicketService } from '../../../services/ticket.service'
 import { rootGroupName } from './constants'
 
 @SlashGroup(rootGroupName)
 @SlashGroup({
-  name: rootGroupName,
-  description: 'Управление тикетами'
+  description: 'Управление тикетами',
+  name: rootGroupName
 })
 @Discord()
 export class TicketCommand {
   private readonly ticketService = new TicketService()
 
   @Slash({
-    name: 'transcript',
-    description: 'Получить транскрипт тикета'
+    description: 'Получить транскрипт тикета',
+    name: 'transcript'
   })
   public async transcript(
     @SlashOption({
       type: ApplicationCommandOptionType.Integer,
-      name: 'id',
       description: 'ID тикета',
-      required: true
+      required: true,
+      name: 'id'
     })
     id: number
   ) {
@@ -34,14 +34,14 @@ export class TicketCommand {
   }
 
   @Slash({
-    name: 'list',
-    description: 'Показать список тикетов'
+    description: 'Показать список тикетов',
+    name: 'list'
   })
   public async list(
     @SlashOption({
+      description: 'ID участника, канала, или тикета',
       type: ApplicationCommandOptionType.String,
-      name: 'id',
-      description: 'ID участника, канала, или тикета'
+      name: 'id'
     })
     id: string
   ) {
@@ -49,22 +49,22 @@ export class TicketCommand {
   }
 
   @Slash({
-    name: 'close',
-    description: 'Закрыть тикет'
+    description: 'Закрыть тикет',
+    name: 'close'
   })
   public async close(
     @SlashOption({
-      type: ApplicationCommandOptionType.Integer,
-      name: 'id',
       description: 'ID тикета (оставить пустым, чтобы закрыть текущий)',
-      required: false
+      type: ApplicationCommandOptionType.Integer,
+      required: false,
+      name: 'id'
     })
     id: number | null,
     @SlashOption({
       type: ApplicationCommandOptionType.String,
-      name: 'reason',
       description: 'Причина закрытия',
-      required: false
+      required: false,
+      name: 'reason'
     })
     reason: string | null,
     interaction: CommandInteraction

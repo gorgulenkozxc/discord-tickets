@@ -1,30 +1,30 @@
 import {
-  ActionRowBuilder,
-  APIEmbed,
   ApplicationCommandOptionType,
-  CommandInteraction,
-  ComponentBuilder,
-  EmbedBuilder,
-  ModalBuilder,
   ModalSubmitInteraction,
   PermissionFlagsBits,
-  TextChannel,
+  CommandInteraction,
+  ActionRowBuilder,
+  ComponentBuilder,
   TextInputBuilder,
-  TextInputStyle
+  TextInputStyle,
+  EmbedBuilder,
+  ModalBuilder,
+  TextChannel,
+  APIEmbed
 } from 'discord.js'
 import {
-  Discord,
   ModalComponent,
-  Slash,
+  SlashOption,
   SlashGroup,
-  SlashOption
+  Discord,
+  Slash
 } from 'discordx'
 
-import { Color } from '../../../constants'
-import { PanelService } from '../../../services/panel.service'
 import { ServerService } from '../../../services/server.service'
-import { createPanelMessage } from '../../helpers'
+import { PanelService } from '../../../services/panel.service'
 import { panelAutocomplete } from '../../utils/autocomplete'
+import { createPanelMessage } from '../../helpers'
+import { Color } from '../../../constants'
 
 const groupName = 'panel'
 const createModalId = 'panel-create'
@@ -32,9 +32,9 @@ const editModalId = 'panel-edit'
 
 @SlashGroup(groupName)
 @SlashGroup({
-  name: groupName,
+  defaultMemberPermissions: [PermissionFlagsBits.Administrator],
   description: 'Управление панелями',
-  defaultMemberPermissions: [PermissionFlagsBits.Administrator]
+  name: groupName
 })
 @Discord()
 export class PanelCommand {
@@ -42,8 +42,8 @@ export class PanelCommand {
   private readonly serverService = new ServerService()
 
   @Slash({
-    name: 'create',
-    description: 'Создать панель'
+    description: 'Создать панель',
+    name: 'create'
   })
   public async create(interaction: CommandInteraction) {
     const modal = new ModalBuilder({
@@ -76,38 +76,38 @@ export class PanelCommand {
   }
 
   @Slash({
-    name: 'edit',
-    description: 'Редактировать панель'
+    description: 'Редактировать панель',
+    name: 'edit'
   })
   public async edit() {
     const modal = new ModalBuilder({
-      title: 'Редактирование панели',
-      customId: editModalId,
       components: [
         //
-      ]
+      ],
+      title: 'Редактирование панели',
+      customId: editModalId
     })
   }
 
   @Slash({
-    name: 'delete',
-    description: 'Удалить панель'
+    description: 'Удалить панель',
+    name: 'delete'
   })
   public async delete() {
     //
   }
 
   @Slash({
-    name: 'restore',
-    description: 'Восстановить эмбед панели'
+    description: 'Восстановить эмбед панели',
+    name: 'restore'
   })
   public async restore(
     @SlashOption({
       type: ApplicationCommandOptionType.String,
-      name: 'id',
+      autocomplete: panelAutocomplete,
       description: 'ID панели',
       required: true,
-      autocomplete: panelAutocomplete
+      name: 'id'
     })
     id: string,
     interaction: CommandInteraction
@@ -117,18 +117,18 @@ export class PanelCommand {
     })
 
     const panel = await this.panelService.getOne({
-      id,
       opts: {
         relations: {
-          server: true,
-          categories: true
+          categories: true,
+          server: true
         }
-      }
+      },
+      id
     })
 
     console.log({
-      panel,
-      guildId: interaction.guildId
+      guildId: interaction.guildId,
+      panel
     })
 
     if (!panel || panel.server.guildId !== interaction.guildId) {
@@ -192,9 +192,9 @@ export class PanelCommand {
     }
 
     const panel = await this.panelService.create({
+      serverId: server.id,
       name: nameInput,
-      embed,
-      serverId: server.id
+      embed
     })
 
     await interaction.followUp({

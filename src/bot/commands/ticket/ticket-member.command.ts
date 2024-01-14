@@ -1,10 +1,10 @@
 import {
+  CommandInteractionResolvedData,
   ApplicationCommandOptionType,
   CommandInteraction,
-  CommandInteractionResolvedData,
   GuildMember
 } from 'discord.js'
-import { Discord, Slash, SlashGroup, SlashOption } from 'discordx'
+import { SlashOption, SlashGroup, Discord, Slash } from 'discordx'
 
 import { rootGroupName } from './constants'
 
@@ -12,21 +12,21 @@ const groupName = 'member'
 
 @SlashGroup(groupName, rootGroupName)
 @SlashGroup({
+  description: 'Управление участниками тикета',
   root: rootGroupName,
-  name: groupName,
-  description: 'Управление участниками тикета'
+  name: groupName
 })
 @Discord()
 export class TicketMemberCommand {
   @Slash({
-    name: 'add',
-    description: 'Добавить участника в тикет'
+    description: 'Добавить участника в тикет',
+    name: 'add'
   })
   public async add(
     @SlashOption({
       type: ApplicationCommandOptionType.Mentionable,
-      name: 'target',
       description: 'Кого добавить',
+      name: 'target',
       required: true
     })
     target: GuildMember,
@@ -36,15 +36,15 @@ export class TicketMemberCommand {
   }
 
   @Slash({
-    name: 'delete',
-    description: 'Удалить участника из тикета'
+    description: 'Удалить участника из тикета',
+    name: 'delete'
   })
   public async delete(
     @SlashOption({
       type: ApplicationCommandOptionType.Mentionable,
+      description: 'Кого удалить',
       required: true,
-      name: 'target',
-      description: 'Кого удалить'
+      name: 'target'
     })
     target: GuildMember,
     interaction: CommandInteractionResolvedData

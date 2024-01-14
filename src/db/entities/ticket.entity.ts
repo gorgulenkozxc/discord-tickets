@@ -1,7 +1,7 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
+import { JoinColumn, ManyToOne, Column, Entity } from 'typeorm'
 
-import { EntityBase } from './common'
 import { PanelCategory } from './panel-category.entity'
+import { EntityBase } from './common'
 
 @Entity('tickets')
 export class Ticket extends EntityBase {

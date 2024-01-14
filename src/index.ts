@@ -1,12 +1,10 @@
-import 'dotenv/config'
-import 'reflect-metadata'
-
-import { resolve } from 'path'
-
 import { importx } from '@discordx/importer'
+import { resolve } from 'path'
+import 'reflect-metadata'
+import 'dotenv/config'
 
-import { bot } from './bot'
 import { dataSource } from './db'
+import { bot } from './bot'
 
 run()
   .then(() => {

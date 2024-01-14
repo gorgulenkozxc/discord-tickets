@@ -2,12 +2,12 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   EmbedBuilder,
-  Message,
-  TextChannel
+  TextChannel,
+  Message
 } from 'discord.js'
 
-import { Panel } from '../../db'
 import { serializePanelButtonId } from '../utils'
+import { Panel } from '../../db'
 
 /**
  * Создаёт и отправляет сообщение с панелью

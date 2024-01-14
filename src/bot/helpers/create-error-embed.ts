@@ -15,14 +15,12 @@ export function createErrorEmbed(
   error?: Error
 ): EmbedBuilder {
   description ??= 'Увы, возникла непредвиденная ошибка'
-  const embed = new EmbedBuilder()
+  return new EmbedBuilder()
     .setTitle('Возникла ошибка')
     .setColor(Color.Yellow)
     .setDescription(`${description}:\`\`\`\n${error?.message}\n\`\`\``)
     .addFields({
-      name: 'ID инцидента',
-      value: `Можете сообщить его поддержке: \`\`\`\n${incidentId}\`\`\``
+      value: `Можете сообщить его поддержке: \`\`\`\n${incidentId}\`\`\``,
+      name: 'ID инцидента'
     })
-
-  return embed
 }
