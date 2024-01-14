@@ -24,7 +24,7 @@ async function run() {
     resolve(__dirname, './bot/events/**/*.{ts,js}')
   )
 
-  console.log('initializing databae...')
+  console.log('initializing database...')
   await dataSource.initialize()
 
   console.log('logging in...')
