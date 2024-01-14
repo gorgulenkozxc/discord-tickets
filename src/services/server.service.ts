@@ -20,6 +20,8 @@ export interface ICreateServerParams {
   guildId: string
 }
 
+export interface IDeleteServerParams extends IConditionsBase {}
+
 export class ServerService {
   private readonly repo = getRepo(Server)
 
@@ -49,6 +51,11 @@ export class ServerService {
     await this.repo.insert(server)
 
     return server
+  }
+
+  public async delete(params: IDeleteServerParams): Promise<void> {
+    await this.repo.softDelete(this.makeConditions(params))
+    return
   }
 
   private makeConditions(params: IConditionsBase): FindOptionsWhere<Server> {

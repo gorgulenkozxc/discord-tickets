@@ -177,12 +177,18 @@ export class PanelCommand {
         .toJSON()
     }
 
-    const server = await this.serverService.getOne({
-      guildId: interaction.guildId!
-    })
+    const server = await this.serverService
+      .getOne({
+        guildId: interaction.guildId!
+      })
+      .then((server) => {
+        return server
+          ? server
+          : this.serverService.create({ guildId: interaction.guildId! })
+      })
 
     if (!server) {
-      throw new Error('Server not found. Try to re-invite bot.')
+      throw new Error('Server not found.')
     }
 
     const panel = await this.panelService.create({
