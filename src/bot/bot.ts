@@ -17,8 +17,8 @@ export const bot = new Client({
 const serverService = new ServerService()
 
 bot.once('ready', async () => {
-  const guilds = await bot.guilds.fetch(),
-    servers = await serverService.getList()
+  const guilds = await bot.guilds.fetch()
+  const servers = await serverService.getList()
 
   for (const guild of guilds
     .filter((g) => !servers.find((s) => s.guildId === g.id))
@@ -27,14 +27,16 @@ bot.once('ready', async () => {
   }
 
   for (const server of servers) {
-    if (!guilds.has(server.guildId))
+    if (!guilds.has(server.guildId)) {
       await serverService.delete({ guildId: server.guildId })
+    }
   }
 })
 
 bot.on('guildCreate', (guild) => {
-  if (!serverService.getOne({ guildId: guild.id }))
+  if (!serverService.getOne({ guildId: guild.id })) {
     serverService.create({ guildId: guild.id })
+  }
 })
 
 bot.on('guildDelete', (guild) => {

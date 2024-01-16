@@ -44,9 +44,7 @@ export class ServerService {
   }
 
   public async create(params: ICreateServerParams): Promise<Server> {
-    const server = this.repo.create({
-      guildId: params.guildId
-    })
+    const server = this.repo.create(params)
 
     await this.repo.insert(server)
 
