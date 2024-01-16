@@ -7,6 +7,7 @@ module.exports = {
     'perfectionist/sort-interfaces': 'warn',
     'perfectionist/sort-classes': 'off',
     'no-duplicate-imports': 'error',
+    'one-var': ['warn', 'never'],
     quotes: ['off', 'single'],
     semi: ['error', 'never'],
     indent: ['off', 2]
