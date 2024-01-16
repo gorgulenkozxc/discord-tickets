@@ -10,7 +10,8 @@ module.exports = {
     'one-var': ['warn', 'never'],
     quotes: ['off', 'single'],
     semi: ['error', 'never'],
-    indent: ['off', 2]
+    indent: ['off', 2],
+    curly: 'warn'
   },
   overrides: [
     {
