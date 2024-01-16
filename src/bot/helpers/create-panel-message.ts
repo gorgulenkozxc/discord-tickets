@@ -36,7 +36,7 @@ export async function createPanelMessage(
   }
 
   return channel.send({
-    embeds: [new EmbedBuilder(panel.embed)],
-    components: [row]
+    components: panel.categories.length ? [row] : [],
+    embeds: [new EmbedBuilder(panel.embed)]
   })
 }

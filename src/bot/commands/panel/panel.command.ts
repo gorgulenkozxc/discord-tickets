@@ -22,8 +22,8 @@ import {
 
 import { ServerService } from '../../../services/server.service'
 import { PanelService } from '../../../services/panel.service'
-import { panelAutocomplete } from '../../utils/autocomplete'
 import { createPanelMessage } from '../../helpers'
+import { panelAutocomplete } from '../../utils'
 import { Color } from '../../../constants'
 
 const groupName = 'panel'
@@ -93,8 +93,29 @@ export class PanelCommand {
     description: 'Удалить панель',
     name: 'delete'
   })
-  public async delete() {
-    //
+  public async delete(
+    @SlashOption({
+      type: ApplicationCommandOptionType.String,
+      autocomplete: panelAutocomplete,
+      description: 'ID панели',
+      required: true,
+      name: 'id'
+    })
+    id: string,
+    // possible feature: delete all related tickets
+    interaction: CommandInteraction
+  ) {
+    await interaction.deferReply({
+      ephemeral: true
+    })
+
+    await this.panelService.delete({
+      id
+    })
+
+    return interaction.followUp({
+      content: `Панель "${id}" удалена`
+    })
   }
 
   @Slash({
@@ -137,6 +158,13 @@ export class PanelCommand {
         ephemeral: true
       })
     }
+
+    // please review this approach
+    // if (!panel.categories.length) {
+    //   return interaction.followUp({
+    //     content: `Панель "${id}" не имеет категорий и не может быть восстановлена`
+    //   })
+    // }
 
     await createPanelMessage(panel, interaction.channel as TextChannel)
 

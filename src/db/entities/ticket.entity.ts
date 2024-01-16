@@ -9,6 +9,12 @@ export class Ticket extends EntityBase {
   @JoinColumn()
   public category!: PanelCategory
 
+  @Column('varchar', { length: 21 })
+  public channelId!: string
+
+  @Column('varchar', { length: 21 })
+  public userId!: string
+
   @Column('uuid')
   public categoryId!: string
 }

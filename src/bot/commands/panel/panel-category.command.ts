@@ -1,48 +1,44 @@
 import {
-  ActionRowBuilder,
-  APIButtonComponent,
-  APIEmbed,
   ApplicationCommandOptionType,
-  ButtonBuilder,
-  ButtonStyle,
-  Channel,
-  ChannelType,
-  CommandInteraction,
-  ComponentBuilder,
-  EmbedBuilder,
-  GuildBasedChannel,
-  ModalBuilder,
   ModalSubmitInteraction,
-  TextBasedChannel,
-  TextChannel,
+  CommandInteraction,
+  APIButtonComponent,
+  ActionRowBuilder,
+  ComponentBuilder,
   TextInputBuilder,
-  TextInputStyle
+  TextInputStyle,
+  ButtonBuilder,
+  ModalBuilder,
+  EmbedBuilder,
+  ChannelType,
+  TextChannel,
+  ButtonStyle,
+  APIEmbed
 } from 'discord.js'
 import {
-  Discord,
   ModalComponent,
-  Slash,
+  SlashOption,
   SlashGroup,
-  SlashOption
+  Discord,
+  Slash
 } from 'discordx'
 
-import { Color } from '../../../constants'
-import { Panel } from '../../../db'
 import { PanelCategoryService } from '../../../services/panel-category.service'
 import { PanelService } from '../../../services/panel.service'
-import { serializePanelButtonId } from '../../utils'
-import { panelAutocomplete } from '../../utils/autocomplete'
+import { panelAutocomplete } from '../../utils'
 import { rootGroupName } from './constants'
+import { Color } from '../../../constants'
 
 const groupName = 'category'
 const createModalId = 'panel-category-create'
 const editModalId = 'panel-category-edit'
+const modalIdDelimiter = '%'
 
 @SlashGroup(groupName, rootGroupName)
 @SlashGroup({
+  description: 'Управление категориями панелей',
   root: rootGroupName,
-  name: groupName,
-  description: 'Управление категориями панелей'
+  name: groupName
 })
 @Discord()
 export class PanelCategoryCommand {
@@ -50,24 +46,24 @@ export class PanelCategoryCommand {
   private readonly panelCategoryService = new PanelCategoryService()
 
   @Slash({
-    name: 'create',
-    description: 'Создать категорию панели (интерактивно)'
+    description: 'Создать категорию панели (интерактивно)',
+    name: 'create'
   })
   public async create(
     @SlashOption({
       type: ApplicationCommandOptionType.Channel,
-      name: 'channel',
-      description: 'Канал для тикетов',
       channelTypes: [ChannelType.GuildText],
+      description: 'Канал для тикетов',
+      name: 'channel',
       required: true
     })
     channel: TextChannel,
     @SlashOption({
       type: ApplicationCommandOptionType.String,
-      name: 'panel',
+      autocomplete: panelAutocomplete,
       description: 'Панель',
       required: true,
-      autocomplete: panelAutocomplete
+      name: 'panel'
     })
     panelId: string,
     interaction: CommandInteraction
@@ -125,22 +121,21 @@ export class PanelCategoryCommand {
   }
 
   @ModalComponent({
-    id: createModalId
+    id: new RegExp(`^${createModalId}`)
   })
   private async createModal(interaction: ModalSubmitInteraction) {
     await interaction.deferReply({
       ephemeral: true
     })
 
-    const [nameInput, slugInput, buttonInput, embedInput, metaInput] = [
+    const [nameInput, slugInput, buttonInput, embedInput] = [
       interaction.fields.getTextInputValue('name'),
       interaction.fields.getTextInputValue('slug'),
       interaction.fields.getTextInputValue('button'),
-      interaction.fields.getTextInputValue('embed'),
-      interaction.fields.getTextInputValue('meta')
+      interaction.fields.getTextInputValue('embed')
     ]
 
-    if (!nameInput || !slugInput || !buttonInput || !embedInput || !metaInput) {
+    if (!nameInput || !slugInput || !buttonInput || !embedInput) {
       await interaction.followUp({
         content: 'Все поля должны быть заполнены'
       })
@@ -148,9 +143,9 @@ export class PanelCategoryCommand {
       return
     }
 
-    // bruh
-    const [channelId, panelId] = JSON.parse(metaInput)
-
+    const [channelId, panelId] = JSON.parse(
+      interaction.customId.split(modalIdDelimiter)[1]
+    )
     const channel = await interaction.guild!.channels.fetch(channelId)
     const panel = await this.panelService.getOne({
       id: panelId
@@ -187,11 +182,11 @@ export class PanelCategoryCommand {
     }
 
     await this.panelCategoryService.create({
+      panelId: panel.id,
       name: nameInput,
       slug: slugInput,
       button,
-      embed,
-      panelId: panel.id
+      embed
     })
 
     await interaction.followUp({

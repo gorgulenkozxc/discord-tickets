@@ -22,6 +22,8 @@ export interface ICreatePanelParams {
   name: string
 }
 
+export interface IDeleteServerParams extends IConditionsBase {}
+
 export class PanelService {
   private readonly repo = getRepo(Panel)
 
@@ -45,6 +47,10 @@ export class PanelService {
     await this.repo.insert(panel)
 
     return panel
+  }
+
+  public async delete(params: IDeleteServerParams): Promise<void> {
+    await this.repo.softDelete(this.makeConditions(params))
   }
 
   public async getOne(
