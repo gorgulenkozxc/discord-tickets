@@ -23,6 +23,11 @@ import {
   Slash
 } from 'discordx'
 
+import {
+  createModalIdPattern,
+  deserializeModalId,
+  serializeModalId
+} from '../../utils/custom-id'
 import { PanelCategoryService } from '../../../services/panel-category.service'
 import { PanelService } from '../../../services/panel.service'
 import { panelAutocomplete } from '../../utils'
@@ -30,9 +35,7 @@ import { rootGroupName } from './constants'
 import { Color } from '../../../constants'
 
 const groupName = 'category'
-const createModalId = 'panel-category-create'
 const editModalId = 'panel-category-edit'
-const modalIdDelimiter = '%'
 
 @SlashGroup(groupName, rootGroupName)
 @SlashGroup({
@@ -69,11 +72,11 @@ export class PanelCategoryCommand {
     interaction: CommandInteraction
   ) {
     const modal = new ModalBuilder({
-      title: 'Создание категории панели',
-      customId: createModalId
+      customId: serializeModalId({ channelId: channel.id, panelId }),
+      title: 'Создание категории панели'
     })
 
-    const fields: ComponentBuilder<any>[] = [
+    const fields = [
       new TextInputBuilder()
         .setStyle(TextInputStyle.Short)
         .setCustomId('name')
@@ -103,25 +106,20 @@ export class PanelCategoryCommand {
         .setPlaceholder(
           'Можно указать содержимое эмбеда или JSON объект с полной настройкой.'
         )
-        .setRequired(true),
-      new TextInputBuilder()
-        .setStyle(TextInputStyle.Short)
-        .setCustomId('meta')
-        .setLabel('Необходимые данные (оставьте нетронутым)')
-        .setPlaceholder('Ну не надо было трогать это поле')
         .setRequired(true)
-        .setValue(JSON.stringify([channel.id, panelId]))
     ]
 
     for (const component of fields) {
-      modal.addComponents(new ActionRowBuilder<any>().addComponents(component))
+      modal.addComponents(
+        new ActionRowBuilder<TextInputBuilder>().addComponents(component)
+      )
     }
 
     await interaction.showModal(modal)
   }
 
   @ModalComponent({
-    id: new RegExp(`^${createModalId}`)
+    id: createModalIdPattern
   })
   private async createModal(interaction: ModalSubmitInteraction) {
     await interaction.deferReply({
@@ -143,9 +141,7 @@ export class PanelCategoryCommand {
       return
     }
 
-    const [channelId, panelId] = JSON.parse(
-      interaction.customId.split(modalIdDelimiter)[1]
-    )
+    const { channelId, panelId } = deserializeModalId(interaction.customId)
     const channel = await interaction.guild!.channels.fetch(channelId)
     const panel = await this.panelService.getOne({
       id: panelId
@@ -185,6 +181,7 @@ export class PanelCategoryCommand {
       panelId: panel.id,
       name: nameInput,
       slug: slugInput,
+      channelId,
       button,
       embed
     })

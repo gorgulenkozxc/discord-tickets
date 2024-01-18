@@ -51,7 +51,7 @@ export class PanelCommand {
       customId: createModalId
     })
 
-    const fields: ComponentBuilder<any>[] = [
+    const fields = [
       new TextInputBuilder()
         .setStyle(TextInputStyle.Short)
         .setCustomId('name')
@@ -69,7 +69,9 @@ export class PanelCommand {
     ]
 
     for (const component of fields) {
-      modal.addComponents(new ActionRowBuilder<any>().addComponents(component))
+      modal.addComponents(
+        new ActionRowBuilder<TextInputBuilder>().addComponents(component)
+      )
     }
 
     await interaction.showModal(modal)
@@ -159,7 +161,7 @@ export class PanelCommand {
       })
     }
 
-    // please review this approach
+    // review: please review this approach
     // if (!panel.categories.length) {
     //   return interaction.followUp({
     //     content: `Панель "${id}" не имеет категорий и не может быть восстановлена`

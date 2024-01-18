@@ -26,6 +26,9 @@ export class PanelCategory extends EntityBase {
   @Column('uuid')
   public panelId!: string
 
+  @Column('text')
+  public channelId!: string
+
   @OneToMany(() => Ticket, (ticket) => ticket.category)
   public tickets!: Ticket[]
 }

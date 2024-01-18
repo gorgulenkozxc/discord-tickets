@@ -2,10 +2,8 @@ import {
   ThreadAutoArchiveDuration,
   BaseGuildTextChannel,
   ButtonInteraction,
-  EmbedBuilder,
   ChannelType,
-  userMention,
-  Message
+  userMention
 } from 'discord.js'
 import { ButtonComponent, Discord } from 'discordx'
 
@@ -45,11 +43,22 @@ export class PanelButtonEvents {
       })
     }
 
+    const channel = await interaction.guild!.channels.fetch(
+      panelCategory.channelId
+    )
+
+    if (!channel) {
+      console.error(`Channel ${panelCategory.channelId} was not found`)
+      return await interaction.followUp({
+        content: 'Канал не найден, свяжитесь с разработчиком'
+      })
+    }
+
     await interaction.followUp({
       content: `Создаём тикет в категории ${panelCategory.name}`
     })
 
-    const thread = await (interaction.channel as BaseGuildTextChannel).threads
+    const thread = await (channel as BaseGuildTextChannel).threads
       .create({
         name: panelCategory.slug + '-' + interaction.user.username,
         autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,

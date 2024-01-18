@@ -1,4 +1,4 @@
-import { EmbedBuilder } from 'discord.js'
+import { EmbedBuilder, codeBlock } from 'discord.js'
 
 import { Color } from '../../constants'
 
@@ -18,9 +18,9 @@ export function createErrorEmbed(
   return new EmbedBuilder()
     .setTitle('Возникла ошибка')
     .setColor(Color.Yellow)
-    .setDescription(`${description}:\`\`\`\n${error?.message}\n\`\`\``)
+    .setDescription(`${description}:${codeBlock(error?.message || '')}`)
     .addFields({
-      value: `Можете сообщить его поддержке: \`\`\`\n${incidentId}\`\`\``,
+      value: `Можете сообщить его поддержке:${codeBlock(incidentId)}`,
       name: 'ID инцидента'
     })
 }

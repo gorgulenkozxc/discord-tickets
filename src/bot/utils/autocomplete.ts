@@ -25,7 +25,8 @@ export async function panelAutocomplete(
 }
 
 export async function ticketAutocomplete(
-  interaction: AutocompleteInteraction
+  interaction: AutocompleteInteraction,
+  { returnChannel }: { returnChannel?: boolean } = {}
 ): Promise<void> {
   const ticketService = new TicketService()
   const tickets = await ticketService.getList({
@@ -47,7 +48,7 @@ export async function ticketAutocomplete(
       name:
         (threads.get(ticket.channelId)?.name || ticket.userId) +
         ` ${dateToStr(ticket.createdAt)}`,
-      value: ticket.id
+      value: returnChannel ? ticket.channelId : ticket.id
     }))
   )
 }
