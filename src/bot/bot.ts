@@ -60,7 +60,7 @@ bot.on('interactionCreate', async (interaction) => {
       error instanceof Error ? error : undefined
     )
 
-    if (interaction.replied) {
+    if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
         embeds: [embed]
       })
