@@ -2,8 +2,10 @@ import {
   ApplicationCommandOptionType,
   CommandInteraction,
   channelMention,
+  ThreadChannel,
   EmbedBuilder,
-  userMention
+  userMention,
+  codeBlock
 } from 'discord.js'
 import { SlashOption, SlashGroup, Discord, Slash } from 'discordx'
 
@@ -11,6 +13,9 @@ import { TicketService } from '../../../services/ticket.service'
 import { ticketAutocomplete, timestamp } from '../../utils'
 import { rootGroupName } from './constants'
 import { Color } from '../../../constants'
+
+const ACTIVE = '📝'
+const CLOSED = '🔒'
 
 @SlashGroup(rootGroupName)
 @SlashGroup({
@@ -44,8 +49,8 @@ export class TicketCommand {
   public async list(
     @SlashOption({
       description: 'ID участника, канала, или тикета',
+      autocomplete: (i) => ticketAutocomplete(i),
       type: ApplicationCommandOptionType.String,
-      autocomplete: ticketAutocomplete,
       required: true,
       name: 'id'
     })
@@ -67,6 +72,8 @@ export class TicketCommand {
       channel: tickets.every((t) => t.channelId === id),
       user: tickets.every((t) => t.userId === id)
     }
+    const threads = (await interaction.guild!.channels.fetchActiveThreads())
+      .threads
 
     const embed = new EmbedBuilder()
       .setDescription(
@@ -90,7 +97,7 @@ export class TicketCommand {
         value: `${channelMention(ticket.channelId)} ${
           by.user ? '' : userMention(ticket.userId)
         } ${timestamp(ticket.createdAt)}`.trim(),
-        name: ticket.id
+        name: `${ticket.id} (${threads.get(id) ? ACTIVE : CLOSED})`
       })
     }
 
@@ -103,12 +110,13 @@ export class TicketCommand {
   })
   public async close(
     @SlashOption({
-      description: 'ID тикета (оставить пустым, чтобы закрыть текущий)',
-      type: ApplicationCommandOptionType.Integer,
+      autocomplete: (i) => ticketAutocomplete(i, { returnChannel: true }),
+      description: 'ID тикета (оставьте пустым, чтобы закрыть текущий)',
+      type: ApplicationCommandOptionType.String,
       required: false,
       name: 'id'
     })
-    id: number | null,
+    id: string | null,
     @SlashOption({
       type: ApplicationCommandOptionType.String,
       description: 'Причина закрытия',
@@ -118,6 +126,58 @@ export class TicketCommand {
     reason: string | null,
     interaction: CommandInteraction
   ) {
-    //
+    await interaction.deferReply({
+      ephemeral: true
+    })
+
+    const channel = (await interaction.guild?.channels.fetch(
+      id || interaction.channelId
+    )) as ThreadChannel | undefined
+
+    if (!channel || !channel.isTextBased()) {
+      return await interaction.followUp({
+        content: 'Канал не найден или он не текстовый'
+      })
+    }
+
+    const ticket = await this.ticketService.getOne({
+      channelId: channel.id
+    })
+
+    if (!ticket) {
+      return await interaction.followUp({
+        content: `Тикет канала ${channelMention(
+          channel.id
+        )} не найден в базе данных`
+      })
+    }
+
+    await this.ticketService.delete({
+      id: ticket.id
+    })
+
+    const embed = new EmbedBuilder()
+      .setTitle('Закрытие тикета')
+      .setFields(
+        {
+          value: userMention(ticket.userId),
+          name: 'Закрыл'
+        },
+        {
+          value: codeBlock(reason || 'Не указана'),
+          name: 'Причина'
+        }
+      )
+      .setColor(Color.Red)
+      .setFooter({
+        iconURL: (
+          await interaction.guild?.members.fetch(interaction.user.id)
+        )?.displayAvatarURL(),
+        text: ticket.id
+      })
+
+    await channel.send({ embeds: [embed] })
+    await channel.setLocked(true)
+    await channel.setArchived(true)
   }
 }

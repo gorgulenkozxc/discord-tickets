@@ -30,6 +30,12 @@ export class TicketService {
     if (typeof params.id !== 'undefined') {
       conditions.id = params.id
     }
+    if (typeof params.userId !== 'undefined') {
+      conditions.userId = params.userId
+    }
+    if (typeof params.channelId !== 'undefined') {
+      conditions.channelId = params.channelId
+    }
     return conditions
   }
 
@@ -37,6 +43,10 @@ export class TicketService {
     const ticket = this.repo.create(params)
     await this.repo.insert(ticket)
     return ticket
+  }
+
+  public async delete(params: IGetOneTicketParams): Promise<void> {
+    await this.repo.softDelete(this.makeConditions(params))
   }
 
   public async getOne(
@@ -61,7 +71,11 @@ export class TicketService {
   ): Promise<Ticket[]> {
     const { id } = params
     return this.repo.find({
-      where: [{ id }, { userId: id }, { channelId: id }],
+      where: [
+        this.makeConditions({ ...params, id }),
+        this.makeConditions({ ...params, id: undefined, userId: id }),
+        this.makeConditions({ ...params, channelId: id, id: undefined })
+      ],
       ...params.opts
     })
   }
