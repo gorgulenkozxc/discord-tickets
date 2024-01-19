@@ -24,9 +24,9 @@ import {
 } from 'discordx'
 
 import {
-  createModalIdPattern,
-  deserializeModalId,
-  serializeModalId
+  deserializeCreateCategoryModalId,
+  serializeCreateCategoryModalId,
+  createCategoryModalIdPattern
 } from '../../utils/custom-id'
 import { PanelCategoryService } from '../../../services/panel-category.service'
 import { PanelService } from '../../../services/panel.service'
@@ -72,7 +72,10 @@ export class PanelCategoryCommand {
     interaction: CommandInteraction
   ) {
     const modal = new ModalBuilder({
-      customId: serializeModalId({ channelId: channel.id, panelId }),
+      customId: serializeCreateCategoryModalId({
+        channelId: channel.id,
+        panelId
+      }),
       title: 'Создание категории панели'
     })
 
@@ -119,7 +122,7 @@ export class PanelCategoryCommand {
   }
 
   @ModalComponent({
-    id: createModalIdPattern
+    id: createCategoryModalIdPattern
   })
   private async createModal(interaction: ModalSubmitInteraction) {
     await interaction.deferReply({
@@ -141,7 +144,9 @@ export class PanelCategoryCommand {
       return
     }
 
-    const { channelId, panelId } = deserializeModalId(interaction.customId)
+    const { channelId, panelId } = deserializeCreateCategoryModalId(
+      interaction.customId
+    )
     const channel = await interaction.guild!.channels.fetch(channelId)
     const panel = await this.panelService.getOne({
       id: panelId

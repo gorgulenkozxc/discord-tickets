@@ -2,8 +2,10 @@ export const panelButtonPrefix = 'ticket-create'
 export const panelButtonIdPattern = new RegExp(
   `^${panelButtonPrefix}\\-(.+?)+$`
 )
-export const createModalPrefix = 'panel-category-create'
-export const createModalIdPattern = new RegExp(`^${createModalPrefix}`)
+export const createCategoryModalPrefix = 'panel-category-create'
+export const createCategoryModalIdPattern = new RegExp(
+  `^${createCategoryModalPrefix}`
+)
 
 /**
  * Создаёт Custom ID кнопки создания тикета
@@ -32,17 +34,17 @@ export function isPanelButtonId(id: string): boolean {
   return id.startsWith(panelButtonPrefix)
 }
 
-export function serializeModalId({
+export function serializeCreateCategoryModalId({
   channelId,
   panelId
 }: {
   channelId: string
   panelId: string
 }): string {
-  return `${createModalPrefix}%${channelId}%${panelId}` // ≈80 chars
+  return `${createCategoryModalPrefix}%${channelId}%${panelId}` // ≈80 chars
 }
 
-export function deserializeModalId(id: string): {
+export function deserializeCreateCategoryModalId(id: string): {
   channelId: string
   panelId: string
 } {
@@ -50,6 +52,6 @@ export function deserializeModalId(id: string): {
   return { channelId, panelId }
 }
 
-export function isModalId(id: string) {
-  return id.startsWith(createModalPrefix)
+export function isCreateCategoryModalId(id: string) {
+  return id.startsWith(createCategoryModalPrefix)
 }
