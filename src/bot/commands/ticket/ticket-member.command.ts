@@ -5,8 +5,11 @@ import {
   ThreadChannel,
   EmbedBuilder,
   userMention,
+  roleMention,
   TextChannel,
   GuildMember,
+  Collection,
+  Role,
   User
 } from 'discord.js'
 import { SlashOption, SlashGroup, Discord, Slash } from 'discordx'
@@ -18,22 +21,23 @@ import { Color } from '../../../constants'
 const groupName = 'member'
 
 function buildEmbed({
+  roleMembersMentions,
   add = true,
   moderator,
   target
 }: {
-  target: GuildMember
+  roleMembersMentions?: string[]
+  target: GuildMember | Role
   moderator: User
   add?: boolean
 }) {
-  return new EmbedBuilder()
-    .setAuthor({
-      iconURL: target.displayAvatarURL(),
-      name: target.user.tag
-    })
+  const targetIsMember = target instanceof GuildMember
+  const embed = new EmbedBuilder()
     .setColor(add ? Color.Green : Color.Red)
     .setTitle(
-      add ? 'Добавление участника в тикет' : 'Удаление участника из тикета'
+      add
+        ? `Добавление участни${targetIsMember ? 'ка(-цы)' : 'ов'} в тикет`
+        : `Удаление участни${targetIsMember ? 'ка(цы)' : 'ов'} из тикета`
     )
     .addFields({
       value: userMention(moderator.id),
@@ -41,10 +45,21 @@ function buildEmbed({
       inline: true
     })
     .addFields({
-      value: userMention(target.id),
-      name: 'Участник',
+      value:
+        (targetIsMember ? userMention : roleMention)(target.id) +
+        (roleMembersMentions ? '\n' + roleMembersMentions?.join(', ') : ''),
+      name: targetIsMember ? 'Участник(-ца)' : 'Роль',
       inline: true
     })
+
+  if (targetIsMember) {
+    embed.setAuthor({
+      iconURL: target.displayAvatarURL(),
+      name: target.user.tag
+    })
+  }
+
+  return embed
 }
 
 @SlashGroup(groupName, rootGroupName)
@@ -58,7 +73,7 @@ export class TicketMemberCommand {
   private readonly ticketService = new TicketService()
 
   @Slash({
-    description: 'Добавить участника в тикет',
+    description: 'Добавить участника или роль в тикет',
     name: 'add'
   })
   public async add(
@@ -68,7 +83,7 @@ export class TicketMemberCommand {
       name: 'target',
       required: true
     })
-    target: GuildMember,
+    target: GuildMember | Role,
     @SlashOption({
       description: 'Выдать права на просмотр канала-категории',
       type: ApplicationCommandOptionType.Boolean,
@@ -85,6 +100,7 @@ export class TicketMemberCommand {
     const ticket = await this.ticketService.getOne({
       channelId: interaction.channelId
     })
+    const targetIsMember = target instanceof GuildMember
 
     if (!ticket) {
       return await interaction.followUp({
@@ -95,7 +111,10 @@ export class TicketMemberCommand {
     const channel = interaction.channel as ThreadChannel
     const categoryChannel = channel.parent as TextChannel
 
-    if (await channel.members.fetch(target.id).catch(() => null)) {
+    if (
+      targetIsMember &&
+      (await channel.members.fetch(target.id).catch(() => null))
+    ) {
       return await interaction.followUp({
         content: `${target} уже есть в тикете`
       })
@@ -116,20 +135,42 @@ export class TicketMemberCommand {
       })
     }
 
-    await channel.members.add(target) // also creates undeletable system message
-    interaction.deleteReply()
-    channel.send({
-      embeds: [
-        buildEmbed({
-          moderator: interaction.user,
-          target
+    let roleMembersMentions: string[] = []
+
+    if (!targetIsMember) {
+      roleMembersMentions = (await interaction.guild!.members.fetch())
+        .filter((m) => !m.user.bot && m.roles.resolve(target.id))
+        .map((m) => userMention(m.id))
+    }
+
+    if (!roleMembersMentions.length) {
+      return await interaction.followUp({
+        content: `Нет участников с ролью ${target} (боты не учитываются)`
+      })
+    }
+
+    channel
+      .send(
+        targetIsMember ? userMention(target.id) : roleMembersMentions!.join('')
+        // mention(s) work as members.add, but don't trigger non-deletable system message
+      )
+      .then((message) => {
+        message.delete()
+        interaction.deleteReply()
+        channel.send({
+          embeds: [
+            buildEmbed({
+              moderator: interaction.user,
+              roleMembersMentions,
+              target
+            })
+          ]
         })
-      ]
-    })
+      })
   }
 
   @Slash({
-    description: 'Удалить участника из тикета',
+    description: 'Удалить участника или роль из тикета',
     name: 'remove'
   })
   public async remove(
@@ -139,7 +180,7 @@ export class TicketMemberCommand {
       required: true,
       name: 'target'
     })
-    target: GuildMember,
+    target: GuildMember | Role,
     interaction: CommandInteraction
   ) {
     await interaction.deferReply({
@@ -149,6 +190,7 @@ export class TicketMemberCommand {
     const ticket = await this.ticketService.getOne({
       channelId: interaction.channelId
     })
+    const targetIsMember = target instanceof GuildMember
 
     if (!ticket) {
       return await interaction.followUp({
@@ -160,17 +202,41 @@ export class TicketMemberCommand {
     // possible feature: delete categoryChannel permission overwrites if
     // a) there were any b) it was the last user's ticket in the category
 
-    if (!(await channel.members.fetch(target.id).catch(() => null))) {
+    if (
+      targetIsMember &&
+      !(await channel.members.fetch(target.id).catch(() => null))
+    ) {
       return await interaction.followUp({
         content: `${target} нет в тикете`
       })
     }
 
-    await channel.members.remove(target.id) // also creates undeletable system message
+    let roleMembers: Collection<string, GuildMember> = new Collection()
+
+    if (!targetIsMember) {
+      roleMembers = (await interaction.guild!.members.fetch()).filter(
+        (m) => !m.user.bot && m.roles.resolve(target.id)
+      )
+    }
+
+    if (!roleMembers.size) {
+      return await interaction.followUp({
+        content: `В тикете не было участников с ролью ${target} (боты не учитываются)`
+      })
+    }
+
+    if (targetIsMember) {
+      await channel.members.remove(target.id) // also creates non-deletable system message
+    } else {
+      for (const member of roleMembers.values()) {
+        await channel.members.remove(member.id) // also creates non-deletable system message
+      }
+    }
     interaction.deleteReply()
     channel.send({
       embeds: [
         buildEmbed({
+          roleMembersMentions: roleMembers.map((m) => userMention(m.id)),
           moderator: interaction.user,
           add: false,
           target
