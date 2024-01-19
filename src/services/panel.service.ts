@@ -49,6 +49,10 @@ export class PanelService {
     return panel
   }
 
+  public async save(panel: Panel): Promise<Panel> {
+    return this.repo.save(panel)
+  }
+
   public async delete(params: IDeleteServerParams): Promise<void> {
     await this.repo.softDelete(this.makeConditions(params))
   }

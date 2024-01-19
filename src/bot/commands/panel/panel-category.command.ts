@@ -4,7 +4,6 @@ import {
   CommandInteraction,
   APIButtonComponent,
   ActionRowBuilder,
-  ComponentBuilder,
   TextInputBuilder,
   TextInputStyle,
   ButtonBuilder,
@@ -26,16 +25,15 @@ import {
 import {
   deserializeCreateCategoryModalId,
   serializeCreateCategoryModalId,
-  createCategoryModalIdPattern
-} from '../../utils/custom-id'
+  createCategoryModalIdPattern,
+  panelAutocomplete
+} from '../../utils'
 import { PanelCategoryService } from '../../../services/panel-category.service'
 import { PanelService } from '../../../services/panel.service'
-import { panelAutocomplete } from '../../utils'
 import { rootGroupName } from './constants'
 import { Color } from '../../../constants'
 
 const groupName = 'category'
-const editModalId = 'panel-category-edit'
 
 @SlashGroup(groupName, rootGroupName)
 @SlashGroup({

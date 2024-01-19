@@ -11,7 +11,7 @@ import {
   deserializePanelButtonId,
   panelButtonIdPattern,
   isPanelButtonId
-} from '../utils/custom-id'
+} from '../utils'
 import { PanelCategoryService } from '../../services/panel-category.service'
 import { TicketService } from '../../services/ticket.service'
 
