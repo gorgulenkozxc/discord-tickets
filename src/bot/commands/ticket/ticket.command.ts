@@ -199,7 +199,8 @@ export class TicketCommand {
       })
 
     await channel.send({ embeds: [embed] })
-    await channel.setLocked(true)
-    await channel.setArchived(true)
+    channel.setLocked(true)
+    channel.setArchived(true)
+    interaction.followUp({ content: 'Тикет успешно закрыт' })
   }
 }

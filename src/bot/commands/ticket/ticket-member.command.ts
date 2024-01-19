@@ -32,12 +32,24 @@ function buildEmbed({
   add?: boolean
 }) {
   const targetIsMember = target instanceof GuildMember
+  const plural = targetIsMember // bruh? can be significantly simplified by using only one variant
+    ? true
+    : roleMembersMentions?.length
+    ? roleMembersMentions.length === 1
+    : true
+
+  console.log(
+    target,
+    targetIsMember,
+    roleMembersMentions,
+    plural ? 'а(-цы)' : 'ов'
+  )
   const embed = new EmbedBuilder()
     .setColor(add ? Color.Green : Color.Red)
     .setTitle(
       add
-        ? `Добавление участни${targetIsMember ? 'ка(-цы)' : 'ов'} в тикет`
-        : `Удаление участни${targetIsMember ? 'ка(цы)' : 'ов'} из тикета`
+        ? `Добавление участник${plural ? 'а(-цы)' : 'ов'} в тикет`
+        : `Удаление участник${plural ? 'а(-цы)' : 'ов'} из тикета`
     )
     .addFields({
       value: userMention(moderator.id),
@@ -135,33 +147,44 @@ export class TicketMemberCommand {
       })
     }
 
-    let roleMembersMentions: string[] = []
+    let roleMembers: Collection<string, GuildMember> = new Collection()
 
     if (!targetIsMember) {
-      roleMembersMentions = (await interaction.guild!.members.fetch())
-        .filter((m) => !m.user.bot && m.roles.resolve(target.id))
-        .map((m) => userMention(m.id))
+      roleMembers = (await interaction.guild!.members.fetch()).filter(
+        (m) => !m.user.bot && m.roles.resolve(target.id)
+      )
+
+      if (!roleMembers.size) {
+        return await interaction.followUp({
+          content: `На сервере нет участников с ролью ${target} (боты не учитываются)`
+        })
+      }
+
+      await channel.members.fetch()
+      roleMembers = roleMembers.filter((m) => !channel.members.resolve(m.id))
+
+      if (!roleMembers.size) {
+        return await interaction.followUp({
+          content: `Все участники с ролью ${target} уже есть в тикете`
+        })
+      }
     }
 
-    if (!roleMembersMentions.length) {
-      return await interaction.followUp({
-        content: `Нет участников с ролью ${target} (боты не учитываются)`
-      })
-    }
-
+    // mentions work as members.add, but don't trigger non-deletable system message
     channel
       .send(
-        targetIsMember ? userMention(target.id) : roleMembersMentions!.join('')
-        // mention(s) work as members.add, but don't trigger non-deletable system message
+        targetIsMember
+          ? userMention(target.id)
+          : roleMembers.map((m) => userMention(m.id)).join('')
       )
       .then((message) => {
-        message.delete()
+        message.delete() // we don't want to duplicate mentions of users
         interaction.deleteReply()
         channel.send({
           embeds: [
             buildEmbed({
+              roleMembersMentions: roleMembers.map((m) => userMention(m.id)),
               moderator: interaction.user,
-              roleMembersMentions,
               target
             })
           ]
@@ -211,18 +234,18 @@ export class TicketMemberCommand {
       })
     }
 
-    let roleMembers: Collection<string, GuildMember> = new Collection()
+    let roleMembers: GuildMember[] = []
 
     if (!targetIsMember) {
-      roleMembers = (await interaction.guild!.members.fetch()).filter(
-        (m) => !m.user.bot && m.roles.resolve(target.id)
-      )
-    }
+      roleMembers = (await channel.members.fetch())
+        .map((m) => m.guildMember as GuildMember)
+        .filter((m) => !m.user.bot && m.roles.resolve(target.id))
 
-    if (!roleMembers.size) {
-      return await interaction.followUp({
-        content: `В тикете не было участников с ролью ${target} (боты не учитываются)`
-      })
+      if (!roleMembers.length) {
+        return await interaction.followUp({
+          content: `В тикете не было участников с ролью ${target} (боты не учитываются)`
+        })
+      }
     }
 
     if (targetIsMember) {
