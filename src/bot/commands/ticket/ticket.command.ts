@@ -8,9 +8,10 @@ import {
   codeBlock
 } from 'discord.js'
 import { SlashOption, SlashGroup, Discord, Slash } from 'discordx'
+import discordTranscripts from 'discord-html-transcripts'
 
+import { ticketAutocomplete, timestamp, dateToStr } from '../../utils'
 import { TicketService } from '../../../services/ticket.service'
-import { ticketAutocomplete, timestamp } from '../../utils'
 import { rootGroupName } from './constants'
 import { Color } from '../../../constants'
 
@@ -32,14 +33,35 @@ export class TicketCommand {
   })
   public async transcript(
     @SlashOption({
-      type: ApplicationCommandOptionType.Integer,
+      autocomplete: (i) => ticketAutocomplete(i, { returnChannel: true }),
+      type: ApplicationCommandOptionType.String,
       description: 'ID тикета',
-      required: true,
+      required: false,
       name: 'id'
     })
-    id: number
+    id: string | null,
+    interaction: CommandInteraction
   ) {
-    //
+    const channel = await interaction.guild?.channels.fetch(
+      id || interaction.channelId
+    )
+
+    if (!channel || !channel.isTextBased()) {
+      return await interaction.followUp({
+        content: `Канал ${
+          id || interaction.channelId
+        } не найден или он не текстовый`
+      })
+    }
+
+    const transcript = await discordTranscripts.createTranscript(channel, {
+      filename: `${channel.name}_${dateToStr()}.html`,
+      poweredBy: false, // remove author from footer
+      saveImages: true, // encode all images in base64 instead of referencing to discord
+      footerText: ' ', // remove footer ('' doesn't work)
+      hydrate: true // inject 3rd party script right into file instead of referencing to CDN
+    })
+    interaction.reply({ files: [transcript] })
   }
 
   @Slash({
