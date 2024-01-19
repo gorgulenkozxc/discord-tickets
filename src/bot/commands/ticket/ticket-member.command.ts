@@ -38,12 +38,6 @@ function buildEmbed({
     ? roleMembersMentions.length === 1
     : true
 
-  console.log(
-    target,
-    targetIsMember,
-    roleMembersMentions,
-    plural ? 'а(-цы)' : 'ов'
-  )
   const embed = new EmbedBuilder()
     .setColor(add ? Color.Green : Color.Red)
     .setTitle(
